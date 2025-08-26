@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Demo — Items & Orders</title>
+</head>
+<body>
+  <h1>Items</h1>
+
+
+  <form action="/orders/create" method="get" style="margin-bottom: 1rem;">
+  <label>Create order with currency: </label>
+  <select name="currency">
+    <option value="eur">EUR</option>
+    <option value="usd">USD</option>
+  </select>
+  <button type="submit">Create</button>
+</form>
+
+<ul>
+  {% for i in items %}
+    <li>
+      <a href="/item/{{ i.id }}">{{ i.name }}</a>
+      &nbsp;—&nbsp;
+      <form action="/orders/add" method="get" style="display:inline;">
+        <input type="hidden" name="item_id" value="{{ i.id }}">
+        Qty: <input type="number" name="qty" value="1" min="1" style="width:4em;">
+        &nbsp;to order:
+        <select name="order_id">
+          {% for o in orders %}
+            <option value="{{ o.id }}">#{{ o.id }} ({{ o.currency|upper }})</option>
+          {% endfor %}
+        </select>
+        <button type="submit">Add</button>
+      </form>
+    </li>
+  {% empty %}
+    <li>No items yet</li>
+  {% endfor %}
+</ul>
+
+  <h1>Orders</h1>
+  <ul>
+    {% for o in orders %}
+      <li><a href="/order/{{ o.id }}">Order #{{ o.id }}</a></li>
+    {% empty %}
+      <li>No orders yet</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

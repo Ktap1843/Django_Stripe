@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Order #{{ order.id }}</title>
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+  {% load money %}
+  <h1>Order #{{ order.id }}</h1>
+  <p>
+  Order currency:
+  <strong>{{ order.currency|upper }}</strong>
+  &nbsp;|&nbsp;
+  Change to:
+  <a href="/orders/{{ order.id }}/set-currency?currency=eur">EUR</a> /
+  <a href="/orders/{{ order.id }}/set-currency?currency=usd">USD</a>
+</p>
+
+  <ul>
+    {% for oi in order.orderitem_set.all %}
+      <li>
+        {{ oi.item.name }} × {{ oi.quantity }}
+        — {{ oi.item.currency|upper }} {{ oi.item.price|money_minor }}
+      </li>
+    {% empty %}
+      <li>The order is empty</li>
+    {% endfor %}
+  </ul>
+
+  {% if order.discounts.all %}
+    <p><strong>Discounts:</strong>
+      {% for d in order.discounts.all %}
+        {{ d.name }}{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    </p>
+  {% endif %}
+
+  {% if order.taxes.all %}
+    <p><strong>Taxes:</strong>
+      {% for t in order.taxes.all %}
+        {{ t.name }} ({{ t.percentage }}%){% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    </p>
+  {% endif %}
+
+  <button id="buy-button">Pay order</button>
+
+  <script>
+    const stripe = Stripe("{{ stripe_pk }}");
+    document.getElementById('buy-button').addEventListener('click', async () => {
+      const resp = await fetch('/buy-order/{{ order.id }}');
+      const data = await resp.json();
+      if (data.id) {
+        stripe.redirectToCheckout({ sessionId: data.id });
+      } else {
+        alert('Error: ' + (data.error || 'unknown'));
+      }
+    });
+  </script>
+</body>
+</html>
